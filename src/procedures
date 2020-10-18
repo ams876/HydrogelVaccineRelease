@@ -1,0 +1,95 @@
+import argparse
+import os
+import numpy as np
+from src.StochasticVaccineRelease import StochasticVaccineRelease
+import matplotlib.pyplot as plt
+
+class Procedure(object):
+
+    def __init__(self, parameters):
+        self.parameters = parameters
+        self.home = os.getcwd()
+
+    def run_StochasticVaccineRelease(self, tmax=20, reps=1, file_num=1, ):
+        sim = StochasticVaccineRelease(parameters=self.parameters)
+        #model = Spatial_LLPS_Model(sim)
+        res, time, numRelease = sim.run(tmax=tmax, file_num=file_num)
+        return res, time, numRelease
+
+
+    def get_trajectories(self):
+        print("Starting post-processing...")
+        out = KP_LAT_Exit(num_odes=self.gillespieLAT.len_ini)
+        output_traj = out.output_trajectories
+        time_vector = out.time_vector
+        # plot_output_trajectories(output_traj, time_vector)
+        return output_traj, time_vector
+
+
+def define_n_initial(R, Ls, La, LckZap, LAT):
+    n_initial = np.zeros(9, dtype=int)
+    n_initial[0] = R
+    n_initial[1] = Ls
+    n_initial[2] = La
+    n_initial[5] = LckZap
+    n_initial[8] = LAT
+    return n_initial
+
+
+def define_parameters():
+    # Define all key parameters of the simulation
+
+    numVaccine = 15 # number of vaccine particles
+    vaccineSize = 0.05 # the size of a single vaccine particle, used to define our lattice dimension
+    numSubvols = 10 # size of the lattice in 1D (so if = 10, there are 10^3 total sites)
+
+    D_high = 5E-3 / vaccineSize**2 # diffusion coef for a vaccine within a high D square
+    D_low = 0 / vaccineSize**2  # diffusion coef for a vaccine within a low D square
+    k_convert = 0.01  # 1/s, the rate at which a single square converts from low to high D
+    delta_k_convert = 0  # 1/s, the rate at which k_convert increases as a function of time? maybe not eh
+
+    parameters = {'D_high': D_high, 'D_low': D_low, 'k_convert': k_convert,
+                  'delta_k_convert' : delta_k_convert, 'numVaccine' : numVaccine,
+                  'numSubvols': numSubvols, 'vaccineSize': vaccineSize}
+
+    return parameters
+
+
+if __name__ == "__main__":
+    #need to uncomment this and add in other parameters for running from the cluster
+    #parser = argparse.ArgumentParser(description="Testing LAT recruitment simulation.",
+    #                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    #parser.add_argument('--file_num', dest='file_num', action='store', type=int,
+    #                    help="Number of the output traj file.")
+    #args = parser.parse_args()
+
+    file_num = 0 #args.file_num
+    tmax = 1000
+    subvols = 20
+    parameters = define_parameters()
+    print(parameters)
+    protocol = Procedure(parameters)
+    res, time, numRelease = protocol.run_StochasticVaccineRelease(tmax=tmax, file_num=file_num)
+
+    print(parameters)
+
+    fig = plt.figure()
+    plt.plot(time, numRelease)
+    plt.xlabel('time')
+    plt.ylabel('num vaccine particles released')
+    plt.show()
+
+
+
+
+    # visualize traj run locally
+
+    '''output = PostProcess('./trajectory_7', protocol.mapping, tmax)  # ./../outputs/trajectory_3
+    traj = output.traj
+    print(traj)
+    visualize3(
+        {k: traj[k] for k in ('R', 'Ls', 'La', 'RLs', 'RLa', 'RLs_LckZap', 'RLa_LckZap', 'RLa_LckZap_LAT', 'LAT')},
+        tmax, subvols, (3, 3))
+    visualizeLattice(vals, Adj, tmax, subvols)
+'''
