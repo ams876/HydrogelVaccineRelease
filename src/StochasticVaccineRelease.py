@@ -19,7 +19,7 @@ class StochasticVaccineRelease(object):
         self.parameters = parameters
 
         self.numSubvols1D = self.parameters['numSubvols']
-        self.numSubvols = self.parameters['numSubvols'] * self.parameters['numSubvols']
+        self.numSubvols = self.parameters['numSubvols']**3
         self.numVaccine = self.parameters['numVaccine']
 
         self.vaccinePos = rnd.sample(range(0, self.numSubvols), self.numVaccine) #randomly assign each vaccine a different starting position
@@ -60,6 +60,18 @@ class StochasticVaccineRelease(object):
             adjacent.append(subvolume - width)
         else:
             # if it's in first row, will be released
+            adjacent.append(-1)
+
+        # 5th: Middle Front
+        if subvolume - (width * width) >= 0:
+            adjacent.append(subvolume - (width * width))
+        else:
+            adjacent.append(-1)
+
+        # 6th: Middle Behind
+        if subvolume + (width * width) < self.numSubvols:
+            adjacent.append(subvolume + (width * width))
+        else:
             adjacent.append(-1)
 
         return adjacent
